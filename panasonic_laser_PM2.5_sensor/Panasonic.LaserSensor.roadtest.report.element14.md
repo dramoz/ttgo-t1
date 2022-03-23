@@ -87,6 +87,11 @@ As the TTGO-T1 works with 3.3V TTL and has a USB port that can provide 5Vdc it w
 | <img src="https://0.rc.xiniu.com/g4/M00/21/4D/CgAG0mGN4YWAaksbAAGmAvzswEM408.jpg" alt="img" style="zoom:50%;" /> |
 | :----------------------------------------------------------: |
 
+The hardware is powered by a 10000 mAh USB power bank, which gave ~36 hours of measurement time.
+
+| <img src="https://github.com/dramoz/ttgo-t1/blob/main/panasonic_laser_PM2.5_sensor/docs_support/roadtest_panasonic_0012.jpg?raw=true" alt="roadtest_panasonic_0012.jpg" style="zoom:25%;" /> |
+| :----------------------------------------------------------: |
+
 ## Firmware
 
 I decided to use the UART port to gather all the sensor information. Although I2C is nice when there is limit on available ports on the system, the TTGO-T1 has an extra UART that can be assigned to any port on the board. Furthermore, the comments about the sensor protocol were discouraging.
@@ -96,7 +101,12 @@ The SN-GCJA5 UART outputs every second all the internal registers. The only appa
 The application consist of:
 
 - TTGO-T1 and TTGO-T1 TFT_eSPI drivers wrapped on my own C++ class with some limited functions to make life easier.
-- panasonic_SN-GCJA5 library to connect to the UART and unpack the serial data
+- panasonic_SN-GCJA5 library to connect to the UART, unpack the serial data and stores:
+  - current measurement
+  - average of values since last reset (#/sec)
+  - min/max values
+  - sum (accumulator) of measurements
+- GUI: the GUI (as explained below) provide a simple user interface to display current measurements (or min., max., average, ...), which can be selected with the `top/right` or `bottom/left` buttons.
 
 The application was implemented, compiled and tested under [PlatformIO](https://platformio.org/), a [Visual Code](https://code.visualstudio.com/) plug-in that replaced my old work flow on the [Arduino IDE](https://www.arduino.cc/en/software). The App implementation followed an Arduino approach, and should be easy to port if required. However, I 100% recommend switching to PlatformIO when possible.
 
@@ -104,7 +114,90 @@ The code can be found at https://github.com/dramoz/ttgo-t1, sub-folder [panasoni
 
 # GUI
 
+The GUI consists of three main pages, where the user can switch between them by single `top/right button` or `bottom/left button` clicks.
 
+- Welcome Screen
+  - Reports sensor connection status and total of packages received
+- Mass Density (μg/m3)
+  - reports the current mass density measurement for PM1.0, PM2.5 and PM10
+- Particle Count
+  - Reports the current particle count for the given ranges
+
+Additional, with the buttons the user can navigate/setup the GUI as:
+
+- `Single clicks`: Next / previous page (bottom/left, top/right buttons)
+- `bottom/left` button
+  - `Double/Triple` clicks: next/previous shows individual measurements with all stored values
+
+- `top/right` button:
+  - `Double/Triple` clicks: next/previous shows available stored values for all variables in pages (e.g. rotates between $current \rightarrow average \rightarrow min. \rightarrow max. \rightarrow total/acc$)
+
+
+
+
+# Having some fun...
+
+## Indoor testing
+
+The initial testing were interesting. Early in the morning, before the furnace quick on and there is no movement around the house, the sensor registered almost negligible values. On a regular day, also the values are low as show in the next picture.
+
+| <img src="https://github.com/dramoz/ttgo-t1/blob/main/panasonic_laser_PM2.5_sensor/docs_support/roadtest_panasonic_0020.jpg?raw=true" alt="roadtest_panasonic_0020.jpg" style="zoom:20%;" /> |
+| :----------------------------------------------------------: |
+
+Measurements inside the house were usually low. However, one day my allergies started to go high, and the sensor registered an increase in particle counts. (Showing max. and average)
+
+| <img src="https://github.com/dramoz/ttgo-t1/blob/main/panasonic_laser_PM2.5_sensor/docs_support/roadtest_panasonic_0015.jpg?raw=true" alt="roadtest_panasonic_0015.jpg" style="zoom:20%;" /> | <img src="https://github.com/dramoz/ttgo-t1/blob/main/panasonic_laser_PM2.5_sensor/docs_support/roadtest_panasonic_0016.jpg?raw=true" alt="roadtest_panasonic_0016.jpg" style="zoom:20%;" /> |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+
+
+
+## Outdoor testing: furnace boiler
+
+My heating needs during winters are supplied primary by and outdoor furnace boiler. Daily, I load 1~2 logs of hardwood and I can get enough heath power during winter (-20C) at half or less the price of propane.
+
+| <img src="https://github.com/dramoz/ttgo-t1/blob/main/panasonic_laser_PM2.5_sensor/docs_support/roadtest_panasonic_0021.jpg?raw=true" alt="roadtest_panasonic_0021.jpg" style="zoom:20%;" /> | <img src="https://github.com/dramoz/ttgo-t1/blob/main/panasonic_laser_PM2.5_sensor/docs_support/roadtest_panasonic_0009.jpg?raw=true" alt="roadtest_panasonic_0009.jpg" style="zoom:20%;" /> |
+| :----------------------------------------------------------: | ------------------------------------------------------------ |
+
+However, loading the logs and proper daily maintenance are kind of dirty. I use regularly a 3M Full Facepiece Reusable Respirator (mask) with N95 filters which I replace on weekly basis. As you can see in the pictures, they get pretty saturated. Having a way to measure the smoke was one of my motives to join this road-test.
+
+| <img src="https://github.com/dramoz/ttgo-t1/blob/main/panasonic_laser_PM2.5_sensor/docs_support/roadtest_panasonic_0019.jpg?raw=true" alt="roadtest_panasonic_0019.jpg" style="zoom:20%;" /> | <img src="https://github.com/dramoz/ttgo-t1/blob/main/panasonic_laser_PM2.5_sensor/docs_support/roadtest_panasonic_0017.jpg?raw=true" alt="roadtest_panasonic_0017.jpg" style="zoom:20%;" /> |
+| :----------------------------------------------------------: | ------------------------------------------------------------ |
+
+The measures outside before operating the boiler were nice and low.
+
+| <img src="https://github.com/dramoz/ttgo-t1/blob/main/panasonic_laser_PM2.5_sensor/docs_support/roadtest_panasonic_0022.jpg?raw=true" alt="roadtest_panasonic_0022.jpg" style="zoom:20%;" /> | <img src="https://github.com/dramoz/ttgo-t1/blob/main/panasonic_laser_PM2.5_sensor/docs_support/roadtest_panasonic_0004.jpg?raw=true" alt="roadtest_panasonic_0004.jpg" style="zoom:20%;" /> |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+
+The next set of pictures will speak by themselves. After opening the door, the counters started to rise.
+
+| <img src="https://github.com/dramoz/ttgo-t1/blob/main/panasonic_laser_PM2.5_sensor/docs_support/roadtest_panasonic_0007.jpg?raw=true" alt="roadtest_panasonic_0007.jpg" style="zoom:20%;" /> | <img src="https://github.com/dramoz/ttgo-t1/blob/main/panasonic_laser_PM2.5_sensor/docs_support/roadtest_panasonic_0001.jpg?raw=true" alt="roadtest_panasonic_0001.jpg" style="zoom:20%;" /> |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+
+Part of the daily maintenance is to shake the ashes at the bottom, which increased the counters.
+
+| <img src="https://github.com/dramoz/ttgo-t1/blob/main/panasonic_laser_PM2.5_sensor/docs_support/roadtest_panasonic_0005.jpg?raw=true" alt="roadtest_panasonic_0005.jpg" style="zoom:20%;" /> | <img src="https://github.com/dramoz/ttgo-t1/blob/main/panasonic_laser_PM2.5_sensor/docs_support/roadtest_panasonic_0002.jpg?raw=true" alt="roadtest_panasonic_0002.jpg" style="zoom:20%;" /> |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+
+The test duration was around five minutes. The following images shows the final results.
+
+| <img src="https://github.com/dramoz/ttgo-t1/blob/main/panasonic_laser_PM2.5_sensor/docs_support/roadtest_panasonic_0010.jpg?raw=true" alt="roadtest_panasonic_0010.jpg" style="zoom:20%;" /> | <img src="https://github.com/dramoz/ttgo-t1/blob/main/panasonic_laser_PM2.5_sensor/docs_support/roadtest_panasonic_0014.jpg?raw=true" alt="roadtest_panasonic_0014jpg" style="zoom:20%;" /> |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+
+A couple of videos are available in the repository were we can appreciate the sensor response:
+
+- [Video1](https://github.com/dramoz/ttgo-t1/blob/main/panasonic_laser_PM2.5_sensor/docs_support/20220320_212445000_iOS.MOV)
+- [Video2](https://github.com/dramoz/ttgo-t1/blob/main/panasonic_laser_PM2.5_sensor/docs_support/20220320_212525000_iOS.MOV)
+- [Video3](https://github.com/dramoz/ttgo-t1/blob/main/panasonic_laser_PM2.5_sensor/docs_support/20220320_213017000_iOS.MOV)
+
+# Final comments and future work
+
+Overall, I was happy with this road-test. The Panasonic SN-GCJA5 PM2.5 Laser sensor is a nice small footprint sensor with a real time response, easy to connect and use. It makes you wish this sensor was incorporated in home furnaces with a nice tracking app, specially  for people with seasonal allergies like polen.
+
+In the future, I want to install it as a permanent sensor for my house and get another one for outdoor measurements. It would be nice to have it as an IoT connected to an ESP32 board.
+
+I would also like to thanks Randall for the opportunity and for the extension to complete this road-test.
+
+As always, comments are most welcome.
 
 # References
 
@@ -112,3 +205,5 @@ The code can be found at https://github.com/dramoz/ttgo-t1, sub-folder [panasoni
 - [Panasonic Laser Type PM Sensor Product Specifications](https://na.industrial.panasonic.com/file-download/8683)
 - [Panasonic SN-GC Series Sensors Datasheet](https://na.industrial.panasonic.com/file-download/8488)
 - [Panasonic SN-GCJA5 Sparkfun library](https://www.arduino.cc/reference/en/libraries/sparkfun-particle-sensor-panasonic-sn-gcja5/)
+- [TTGO-T1 Panasonic Laser PM2.5 Sensor firmware (GitHub)](https://github.com/dramoz/ttgo-t1/tree/main/panasonic_laser_PM2.5_sensor)
+
